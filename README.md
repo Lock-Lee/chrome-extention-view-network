@@ -135,6 +135,14 @@ Displays detailed information about a selected request, including:
 - Response body
 - cURL command generation
 
+
+Example View
+
+<img width="804" height="628" alt="Screenshot 2568-10-02 at 18 10 12" src="https://github.com/user-attachments/assets/a7caa622-b50d-447b-8bda-03b122a01113" />
+<img width="798" height="626" alt="Screenshot 2568-10-02 at 18 10 34" src="https://github.com/user-attachments/assets/ee0f077a-4eab-45c2-b615-f04ed9559ae0" />
+
+
+
 ## License
 
 MIT
