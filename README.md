@@ -21,14 +21,90 @@ A Chrome extension for monitoring network requests with size, time, and error in
 
 > Note: This extension uses Manifest V3 and can observe network requests but cannot block or modify them.
 
-## Installation
+## Installation / การติดตั้ง
 
-### Loading the unpacked extension in Chrome
+### วิธีที่ 1: ติดตั้งจาก Source Code (สำหรับ Developer)
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" by clicking the toggle switch in the top right corner
-3. Click "Load unpacked" button and select the extension folder
-4. The extension should now appear in your browser toolbar
+#### ข้อกำหนดเบื้องต้น
+
+- Google Chrome browser เวอร์ชัน 88 หรือใหม่กว่า
+- ไฟล์ Extension ที่ดาวน์โหลดมาแล้ว
+
+#### ขั้นตอนการติดตั้ง
+
+1. **ดาวน์โหลด Extension**
+
+   ```bash
+   git clone https://github.com/Lock-Lee/chrome-extention-view-network.git
+   cd chrome-extention-view-network
+   ```
+
+2. **เปิด Chrome Extensions Manager**
+   - เปิด Google Chrome
+   - ไปที่ `chrome://extensions/` หรือ
+   - คลิกเมนู Chrome (⋮) → More tools → Extensions
+
+3. **เปิดใช้งาน Developer Mode**
+   - คลิกสวิตช์ "Developer mode" ที่มุมขวาบนให้เป็นสีฟ้า
+
+4. **โหลด Extension**
+   - คลิกปุ่ม "Load unpacked"
+   - เลือกโฟลเดอร์ที่มีไฟล์ `manifest.json`
+   - คลิก "Select Folder" หรือ "เลือกโฟลเดอร์"
+
+5. **ยืนยันการติดตั้ง**
+   - Extension จะปรากฏในรายการ Extensions
+   - ไอคอน View Network จะแสดงในแถบเครื่องมือของ Chrome
+
+### วิธีที่ 2: ติดตั้งจาก .crx File (ถ้ามี)
+
+1. ดาวน์โหลดไฟล์ `.crx`
+2. ลากไฟล์ `.crx` ไปวางในหน้า `chrome://extensions/`
+3. คลิก "Add extension" เพื่อยืนยันการติดตั้ง
+
+### วิธีที่ 3: ติดตั้งจาก Chrome Web Store (เมื่อเผยแพร่แล้ว)
+
+> **หมายเหตุ:** ขณะนี้ Extension ยังไม่ได้เผยแพร่บน Chrome Web Store
+
+### การตรวจสอบการติดตั้ง
+
+หลังจากติดตั้งเสร็จสิ้น คุณสามารถตรวจสอบได้โดย:
+
+หลังจากติดตั้งเสร็จแล้ว คุณจะเห็น:
+
+- ไอคอน View Network ในแถบเครื่องมือ
+- สามารถคลิกไอคอนเพื่อเปิด popup ได้
+- สามารถใช้ keyboard shortcut **Ctrl+Shift+M** (Windows/Linux) หรือ **Cmd+Shift+M** (macOS)
+
+### การแก้ไขปัญหาการติดตั้ง
+
+#### ปัญหาที่พบบ่อย
+
+1. **ไม่สามารถโหลด Extension ได้**
+   - ตรวจสอบว่าเปิด Developer mode แล้ว
+   - ตรวจสอบว่าเลือกโฟลเดอร์ที่มีไฟล์ `manifest.json`
+
+2. **Extension ไม่ทำงาน**
+   - ลองรีโหลด Extension ใน chrome://extensions/
+   - ตรวจสอบ Console สำหรับ error messages
+
+3. **ไม่เห็นไอคอนในแถบเครื่องมือ**
+   - คลิกไอคอน Extension (ปุ่มตัวต่อ) และ pin ไอคอน View Network
+   - หรือไปที่ Window → Extensions เพื่อจัดการไอคอน
+
+### การอัปเดต Extension
+
+1. ไปที่ `chrome://extensions/`
+2. หาการ์ด View Network
+3. คลิกปุ่ม "Reload" หรือ "รีโหลด"
+4. หรือใช้ keyboard shortcut **Ctrl+R** (Windows/Linux) หรือ **Cmd+R** (macOS) ในหน้า Extensions
+
+### การถอนการติดตั้ง
+
+1. ไปที่ `chrome://extensions/`
+2. หาการ์ด View Network  
+3. คลิก "Remove" หรือ "ลบ"
+4. ยืนยันการลบใน dialog ที่ปรากฏ
 
 ## Usage
 
