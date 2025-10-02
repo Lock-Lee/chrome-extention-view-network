@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mr. KeeYed</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Mr. KeeYed</h1>
+    <div class="header-controls">
+      <span class="shortcut-hint" title="Keyboard shortcut" id="shortcut-display"></span>
+      <button id="menu-toggle" class="icon-button">≡</button>
+    </div>
+  </header>
+
+  <nav class="tab-nav">
+    <button class="tab-button active" data-tab="requests">Requests</button>
+    <button class="tab-button" data-tab="details">Details</button>
+  </nav>
+  
+  <div class="action-bar">
+    <input type="text" id="filter" placeholder="ตัวกอง" />
+    <select id="method-filter">
+      <option value="">All Methods</option>
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+      <option value="PUT">PUT</option>
+      <option value="DELETE">DELETE</option>
+      <option value="FETCH">FETCH</option>
+      <option value="OPTIONS">OPTIONS</option>
+      <option value="HEAD">HEAD</option>
+      <option value="PATCH">PATCH</option>
+      <option value="CONNECT">CONNECT</option>
+      <option value="TRACE">TRACE</option>
+      <option value="OTHER">อื่นๆ</option>
+    </select>
+    <select id="type-filter">
+      <option value="">All Types</option>
+      <option value="fetch">Fetch/XHR</option>
+      <option value="script">Script</option>
+      <option value="stylesheet">Stylesheet</option>
+      <option value="image">Image</option>
+      <option value="font">Font</option>
+      <option value="media">Media</option>
+      <option value="other">Other</option>
+    </select>
+    <button id="export-json">Export JSON</button>
+    <button id="clear-data">Clear</button>
+  </div>
+
+  <div id="requests-tab" class="tab-content active">
+    <!-- Welcome image container -->
+    <div id="welcome-container" class="welcome-image-container">
+      <img src="image.png" alt="Mr. KeeYed" id="welcome-image" />
+    </div>
+    
+    <table id="requests-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>URL</th>
+          <th>ขนาด</th>
+          <th>เวลา</th>
+          <th>สถานะ</th>
+        </tr>
+      </thead>
+      <tbody id="requests-body"></tbody>
+    </table>
+  </div>
+
+  <div id="details-tab" class="tab-content">
+    <div id="request-details">
+      <h3>Request Details</h3>
+      <div class="detail-section">
+        <h4>General</h4>
+        <div id="general-details"></div>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Request Headers</h4>
+        <pre id="request-headers" class="code-block"></pre>
+        <button class="copy-button" data-target="request-headers">Copy</button>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Request Body</h4>
+        <pre id="request-body" class="code-block"></pre>
+        <button class="copy-button" data-target="request-body">Copy</button>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Response Headers</h4>
+        <pre id="response-headers" class="code-block"></pre>
+        <button class="copy-button" data-target="response-headers">Copy</button>
+      </div>
+      
+      <div class="detail-section">
+        <h4>Response Body</h4>
+        <pre id="response-body" class="code-block"></pre>
+        <button class="copy-button" data-target="response-body">Copy</button>
+      </div>
+
+      <div class="detail-section">
+        <h4>Copy as cURL</h4>
+        <button id="copy-curl" class="full-button">Copy cURL Command</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

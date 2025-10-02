@@ -1,0 +1,9 @@
+<!-- Simple PNG icon for a network monitor (128x128) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#1976D2" rx="16" ry="16" />
+  <circle cx="64" cy="64" r="40" fill="white" fill-opacity="0.2" />
+  <path fill="white" d="M32 48 L96 48 M32 64 L96 64 M32 80 L96 80 M40 38 L40 90 M64 38 L64 90 M88 38 L88 90" stroke="white" stroke-width="6" />
+  <circle cx="40" cy="64" r="6" fill="white" />
+  <circle cx="64" cy="48" r="6" fill="white" />
+  <circle cx="88" cy="80" r="6" fill="white" />
+</svg>
