@@ -1,4 +1,4 @@
-# Mr. KeeYed Extension - Important Note
+# View Network Extension - Important Note
 
 In order to load this extension in Chrome, please follow these steps:
 

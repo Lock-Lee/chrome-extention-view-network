@@ -1,4 +1,4 @@
-# Mr. KeeYed
+# View Network
 
 A Chrome extension for monitoring network requests with size, time, and error information, with cURL export capability.
 
@@ -32,7 +32,7 @@ A Chrome extension for monitoring network requests with size, time, and error in
 
 ## Usage
 
-1. Click on the Mr. KeeYed icon in your browser toolbar to open the popup, or use the keyboard shortcut:
+1. Click on the View Network icon in your browser toolbar to open the popup, or use the keyboard shortcut:
    - **Ctrl+Shift+M** (Windows/Linux)
    - **Command+Shift+M** (macOS)
 2. Browse websites and watch network requests populate in real-time

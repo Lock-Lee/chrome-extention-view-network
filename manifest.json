@@ -1,5 +1,5 @@
 {
-    "name": "Mr. KeeYed",
+    "name": "View Network",
     "version": "1.0.0",
     "description": "Monitor network requests with size, time, and error information, with cURL export capability",
     "manifest_version": 3,
@@ -36,7 +36,7 @@
                 "default": "Ctrl+Shift+M",
                 "mac": "Shift+Command+M"
             },
-            "description": "Open Mr. KeeYed"
+            "description": "Open View Network"
         }
     }
 }
