@@ -1,42 +1,22 @@
 {
-    "name": "View Network",
-    "version": "1.0.0",
-    "description": "Monitor network requests with size, time, and error information, with cURL export capability",
-    "manifest_version": 3,
-    "action": {
-        "default_popup": "popup.html",
-        "default_icon": {
-            "16": "icons/icon16.png",
-            "48": "icons/icon48.png",
-            "128": "icons/icon128.png"
-        }
-    },
-    "icons": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-    },
-    "permissions": [
-        "webRequest",
-        "storage",
-        "activeTab",
-        "scripting"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "background": {
-        "service_worker": "background.js",
-        "type": "module"
-    },
-    "devtools_page": "devtools.html",
-    "commands": {
-        "_execute_action": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+M",
-                "mac": "Shift+Command+M"
-            },
-            "description": "Open View Network"
-        }
+  "manifest_version": 3,
+  "name": "View Network",
+  "version": "2.0.0",
+  "description": "ดู network request ของแท็บที่เปิดอยู่แบบ live — กรอง error ได้ในคลิกเดียว คัดลอกเป็น cURL / fetch และ export เป็น HAR",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "View Network",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "permissions": ["webRequest", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "devtools_page": "devtools.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Ctrl+Shift+M", "mac": "Command+Shift+M" },
+      "description": "เปิด View Network"
     }
+  }
 }
