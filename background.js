@@ -1,210 +1,210 @@
-// Store for network requests
-let networkRequests = [];
-let requestCounter = 0;
+// View Network — background service worker.
+// Captures requests with chrome.webRequest, keeps them in chrome.storage.session
+// (so they survive the worker being suspended), and pushes live updates to any
+// open popup through a long-lived port.
 
-// Initialize
-function init() {
-  // Set up request interception
-  chrome.webRequest.onBeforeRequest.addListener(
-    handleBeforeRequest,
-    { urls: ["<all_urls>"] },
-    ["requestBody"]
-  );
+import { decodeRequestBody, getHeader, headersToObject } from "./lib.js";
 
-  chrome.webRequest.onBeforeSendHeaders.addListener(
-    handleBeforeSendHeaders,
-    { urls: ["<all_urls>"] },
-    ["requestHeaders"]
-  );
+const MAX_REQUESTS = 1000;
+const FILTER = { urls: ["<all_urls>"] };
 
-  chrome.webRequest.onResponseStarted.addListener(
-    handleResponseStarted,
-    { urls: ["<all_urls>"] },
-    ["responseHeaders"]
-  );
+/** requestId -> record (Map keeps insertion order = chronological) */
+let requests = new Map();
+let recording = true;
+let counter = 0;
+const ports = new Set();
 
-  chrome.webRequest.onCompleted.addListener(
-    handleCompleted,
-    { urls: ["<all_urls>"] },
-    ["responseHeaders"]
-  );
+// ---------- persistence ----------
 
-  chrome.webRequest.onErrorOccurred.addListener(handleError, {
-    urls: ["<all_urls>"],
+const ready = (async () => {
+  try {
+    const saved = await chrome.storage.session.get(["requests", "recording", "counter"]);
+    if (Array.isArray(saved.requests)) {
+      requests = new Map(saved.requests.map((r) => [r.requestId, r]));
+    }
+    if (typeof saved.recording === "boolean") recording = saved.recording;
+    if (typeof saved.counter === "number") counter = saved.counter;
+  } catch (e) {
+    console.warn("View Network: could not restore session data", e);
+  }
+})();
+
+let saveQueued = false;
+let pushTimer = null;
+
+function changed() {
+  // Save on the next tick (batched): Chrome may stop an idle worker at any time,
+  // so a long debounce would lose the last requests.
+  if (!saveQueued) {
+    saveQueued = true;
+    Promise.resolve().then(() => {
+      saveQueued = false;
+      chrome.storage.session
+        .set({ requests: [...requests.values()], recording, counter })
+        .catch((e) => console.warn("View Network: save failed", e));
+    });
+  }
+  if (!pushTimer && ports.size) {
+    pushTimer = setTimeout(() => {
+      pushTimer = null;
+      broadcast();
+    }, 200);
+  }
+}
+
+function snapshot() {
+  return { type: "state", recording, requests: [...requests.values()] };
+}
+
+function broadcast() {
+  const msg = snapshot();
+  for (const port of ports) {
+    try {
+      port.postMessage(msg);
+    } catch {
+      ports.delete(port);
+    }
+  }
+}
+
+function trim() {
+  while (requests.size > MAX_REQUESTS) {
+    requests.delete(requests.keys().next().value);
+  }
+}
+
+// ---------- capture ----------
+// Listeners are registered synchronously at top level (required for MV3 workers).
+
+chrome.webRequest.onBeforeRequest.addListener(
+  (d) => {
+    ready.then(() => {
+      if (!recording) return;
+      // A new page load in a tab starts a fresh log for that tab, like DevTools.
+      if (d.type === "main_frame" && d.tabId >= 0) {
+        for (const [id, r] of requests) if (r.tabId === d.tabId) requests.delete(id);
+      }
+      const existing = requests.get(d.requestId);
+      if (existing) {
+        // Redirect: same requestId, new URL. Keep the hop and start a new record.
+        requests.delete(d.requestId);
+        const hopId = `${d.requestId}:${counter}`;
+        requests.set(hopId, {
+          ...existing,
+          requestId: hopId,
+          time: existing.time ?? Math.round(d.timeStamp - existing.startTime),
+        });
+      }
+      requests.set(d.requestId, {
+        id: `r${counter++}`,
+        requestId: d.requestId,
+        tabId: d.tabId,
+        url: d.url,
+        method: d.method,
+        type: d.type,
+        startTime: d.timeStamp,
+        status: null,
+        statusText: "",
+        time: null,
+        size: null,
+        error: null,
+        fromCache: false,
+        requestHeaders: {},
+        requestBody: decodeRequestBody(d.requestBody),
+        responseHeaders: {},
+      });
+      trim();
+      changed();
+    });
+  },
+  FILTER,
+  ["requestBody"]
+);
+
+function update(requestId, fn) {
+  ready.then(() => {
+    const rec = requests.get(requestId);
+    if (!rec) return;
+    fn(rec);
+    changed();
   });
-
-  // Listen for messages from popup
-  chrome.runtime.onMessage.addListener(handleMessage);
 }
 
-// Handle before request (captures request body)
-function handleBeforeRequest(details) {
-  const requestId = details.requestId;
+chrome.webRequest.onSendHeaders.addListener(
+  (d) => update(d.requestId, (r) => (r.requestHeaders = headersToObject(d.requestHeaders))),
+  FILTER,
+  ["requestHeaders", "extraHeaders"]
+);
 
-  // Create or update request object
-  const index = networkRequests.findIndex((req) => req.requestId === requestId);
+chrome.webRequest.onHeadersReceived.addListener(
+  (d) =>
+    update(d.requestId, (r) => {
+      r.status = d.statusCode;
+      r.statusText = (d.statusLine || "").replace(/^HTTP\/[\d.]+\s+\d+\s*/, "");
+      r.responseHeaders = headersToObject(d.responseHeaders);
+      const len = getHeader(r.responseHeaders, "content-length");
+      if (len != null) r.size = parseInt(len, 10);
+    }),
+  FILTER,
+  ["responseHeaders", "extraHeaders"]
+);
 
-  if (index === -1) {
-    // New request
-    const request = {
-      id: `req_${requestCounter++}`,
-      requestId: requestId,
-      url: details.url,
-      method: details.method,
-      startTime: details.timeStamp,
-      status: null,
-      size: 0,
-      time: null,
-      type: details.type,
-      requestBody: null,
-      requestHeaders: {},
-      responseHeaders: {},
-      responseBody: null,
-    };
+chrome.webRequest.onCompleted.addListener(
+  (d) =>
+    update(d.requestId, (r) => {
+      r.status = d.statusCode;
+      r.fromCache = d.fromCache;
+      r.ip = d.ip;
+      r.time = Math.round(d.timeStamp - r.startTime);
+    }),
+  FILTER
+);
 
-    // Parse request body if available
-    if (details.requestBody) {
-      if (details.requestBody.raw) {
-        // Binary data - not fully supported yet
-        request.requestBody = "Binary data";
-      } else if (details.requestBody.formData) {
-        request.requestBody = JSON.stringify(details.requestBody.formData);
+chrome.webRequest.onErrorOccurred.addListener(
+  (d) =>
+    update(d.requestId, (r) => {
+      r.error = d.error.replace(/^net::/, "");
+      r.status = r.status || 0;
+      r.time = Math.round(d.timeStamp - r.startTime);
+    }),
+  FILTER
+);
+
+chrome.tabs.onRemoved.addListener((tabId) =>
+  ready.then(() => {
+    let removed = false;
+    for (const [id, r] of requests) {
+      if (r.tabId === tabId) {
+        requests.delete(id);
+        removed = true;
       }
     }
+    if (removed) changed();
+  })
+);
 
-    networkRequests.push(request);
-  } else {
-    // Existing request
-    const request = networkRequests[index];
+// ---------- UI connection ----------
 
-    if (details.requestBody) {
-      if (details.requestBody.raw) {
-        request.requestBody = "Binary data";
-      } else if (details.requestBody.formData) {
-        request.requestBody = JSON.stringify(details.requestBody.formData);
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "ui") return;
+  ports.add(port);
+  port.onDisconnect.addListener(() => ports.delete(port));
+  port.onMessage.addListener(async (msg) => {
+    await ready;
+    if (msg.type === "hello") {
+      port.postMessage(snapshot());
+    } else if (msg.type === "clear") {
+      if (msg.tabId == null) {
+        requests.clear();
+      } else {
+        for (const [id, r] of requests) if (r.tabId === msg.tabId) requests.delete(id);
       }
+      changed();
+      broadcast();
+    } else if (msg.type === "setRecording") {
+      recording = Boolean(msg.value);
+      changed();
+      broadcast();
     }
-  }
-
-  return {};
-}
-
-// Handle before send headers (captures request headers)
-function handleBeforeSendHeaders(details) {
-  const requestId = details.requestId;
-
-  const index = networkRequests.findIndex((req) => req.requestId === requestId);
-  if (index === -1) return {};
-
-  const request = networkRequests[index];
-
-  // Extract headers
-  if (details.requestHeaders) {
-    const headers = {};
-    details.requestHeaders.forEach((header) => {
-      headers[header.name] = header.value;
-    });
-    request.requestHeaders = headers;
-  }
-
-  return {};
-}
-
-// Handle response started (captures response headers)
-function handleResponseStarted(details) {
-  const requestId = details.requestId;
-
-  const index = networkRequests.findIndex((req) => req.requestId === requestId);
-  if (index === -1) return;
-
-  const request = networkRequests[index];
-
-  // Update status code
-  request.status = details.statusCode;
-
-  // Extract response headers
-  if (details.responseHeaders) {
-    const headers = {};
-    details.responseHeaders.forEach((header) => {
-      headers[header.name] = header.value;
-    });
-    request.responseHeaders = headers;
-
-    // Try to get content length
-    const contentLength =
-      headers["content-length"] || headers["Content-Length"];
-    if (contentLength) {
-      request.size = parseInt(contentLength, 10);
-    }
-  }
-}
-
-// Handle completed request
-function handleCompleted(details) {
-  const requestId = details.requestId;
-
-  const index = networkRequests.findIndex((req) => req.requestId === requestId);
-  if (index === -1) return;
-
-  const request = networkRequests[index];
-
-  // Calculate request duration
-  request.time = Math.round(details.timeStamp - request.startTime);
-
-  // Update status if not set
-  if (!request.status) {
-    request.status = details.statusCode;
-  }
-
-  // Update response headers if needed
-  if (
-    details.responseHeaders &&
-    Object.keys(request.responseHeaders).length === 0
-  ) {
-    const headers = {};
-    details.responseHeaders.forEach((header) => {
-      headers[header.name] = header.value;
-    });
-    request.responseHeaders = headers;
-  }
-
-  // Cap the size of stored requests
-  if (networkRequests.length > 1000) {
-    networkRequests = networkRequests.slice(-1000);
-  }
-}
-
-// Handle request error
-function handleError(details) {
-  const requestId = details.requestId;
-
-  const index = networkRequests.findIndex((req) => req.requestId === requestId);
-  if (index === -1) return;
-
-  const request = networkRequests[index];
-
-  // Mark as error
-  request.error = details.error;
-  request.status = 0; // Use 0 for errors
-
-  // Calculate duration if possible
-  if (request.startTime) {
-    request.time = Math.round(details.timeStamp - request.startTime);
-  }
-}
-
-// Handle messages from popup
-function handleMessage(message, sender, sendResponse) {
-  if (message.action === "getNetworkRequests") {
-    sendResponse({ requests: networkRequests });
-  } else if (message.action === "clearNetworkRequests") {
-    networkRequests = [];
-    requestCounter = 0;
-    sendResponse({ success: true });
-  }
-
-  return true; // Indicates async response
-}
-
-// Initialize on load
-init();
+  });
+});

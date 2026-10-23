@@ -1,115 +1,50 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="th">
   <head>
     <meta charset="UTF-8" />
     <title>View Network</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ui.css" />
   </head>
-  <body>
-    <header>
-      <h1>View Network</h1>
-      <div class="header-controls">
-        <span
-          class="shortcut-hint"
-          title="Keyboard shortcut"
-          id="shortcut-display"
-        ></span>
+  <body data-mode="panel">
+    <header class="bar">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" width="20" height="20" />
+        <span>View Network</span>
       </div>
+      <button id="record" class="record" type="button">
+        <span class="dot" aria-hidden="true"></span><span class="label">กำลังบันทึก</span>
+      </button>
+      <div class="spacer"></div>
+      <button id="clear" class="ghost" type="button" title="ล้างรายการ">ล้าง</button>
+      <button id="export" class="ghost" type="button" title="ดาวน์โหลดเป็นไฟล์ .har (เปิดได้ใน Chrome DevTools, Postman, Charles)">⬇ HAR</button>
     </header>
 
-    <nav class="tab-nav">
-      <button class="tab-button active" data-tab="requests">Requests</button>
-      <button class="tab-button" data-tab="details">Details</button>
-    </nav>
-
-    <div class="action-bar">
-      <input type="text" id="filter" placeholder="ตัวกอง" />
-      <select id="method-filter">
-        <option value="">All Methods</option>
-        <option value="GET">GET</option>
-        <option value="POST">POST</option>
-        <option value="PUT">PUT</option>
-        <option value="DELETE">DELETE</option>
-        <option value="FETCH">FETCH</option>
-        <option value="OPTIONS">OPTIONS</option>
-        <option value="HEAD">HEAD</option>
-        <option value="PATCH">PATCH</option>
-        <option value="CONNECT">CONNECT</option>
-        <option value="TRACE">TRACE</option>
-        <option value="OTHER">อื่นๆ</option>
-      </select>
-      <select id="type-filter">
-        <option value="">All Types</option>
-        <option value="fetch">Fetch/XHR</option>
-        <option value="script">Script</option>
-        <option value="stylesheet">Stylesheet</option>
-        <option value="image">Image</option>
-        <option value="font">Font</option>
-        <option value="media">Media</option>
-        <option value="other">Other</option>
-      </select>
-      <button id="export-json">Export JSON</button>
-      <button id="clear-data">Clear</button>
-    </div>
-
-    <div id="requests-tab" class="tab-content active">
-      <table id="requests-table">
-        <thead>
-          <tr>
-            <th>Method</th>
-            <th>URL</th>
-            <th>ขนาด</th>
-            <th>เวลา</th>
-            <th>สถานะ</th>
-          </tr>
-        </thead>
-        <tbody id="requests-body"></tbody>
-      </table>
-    </div>
-
-    <div id="details-tab" class="tab-content">
-      <div id="request-details">
-        <h3>Request Details</h3>
-        <div class="detail-section">
-          <h4>General</h4>
-          <div id="general-details"></div>
-        </div>
-
-        <div class="detail-section">
-          <h4>Request Headers</h4>
-          <pre id="request-headers" class="code-block"></pre>
-          <button class="copy-button" data-target="request-headers">
-            Copy
-          </button>
-        </div>
-
-        <div class="detail-section">
-          <h4>Request Body</h4>
-          <pre id="request-body" class="code-block"></pre>
-          <button class="copy-button" data-target="request-body">Copy</button>
-        </div>
-
-        <div class="detail-section">
-          <h4>Response Headers</h4>
-          <pre id="response-headers" class="code-block"></pre>
-          <button class="copy-button" data-target="response-headers">
-            Copy
-          </button>
-        </div>
-
-        <div class="detail-section">
-          <h4>Response Body</h4>
-          <pre id="response-body" class="code-block"></pre>
-          <button class="copy-button" data-target="response-body">Copy</button>
-        </div>
-
-        <div class="detail-section">
-          <h4>Copy as cURL</h4>
-          <button id="copy-curl" class="full-button">Copy cURL Command</button>
-        </div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="ค้นหา URL, method, status…   (กด / )" autocomplete="off" />
+      <div class="chips" role="group" aria-label="ตัวกรอง">
+        <button class="chip" data-chip="all" type="button">ทั้งหมด <span class="count">0</span></button>
+        <button class="chip" data-chip="api" type="button">API <span class="count">0</span></button>
+        <button id="chip-error" class="chip error" data-chip="error" type="button">Error <span class="count">0</span></button>
       </div>
     </div>
 
-    <script src="panel.js"></script>
+    <main>
+      <ul id="list" class="list"></ul>
+      <div id="empty" class="empty" hidden>
+        <div class="empty-icon" aria-hidden="true">📡</div>
+        <h2 id="empty-title"></h2>
+        <p id="empty-text"></p>
+        <button id="empty-reload" class="primary" type="button">↻ รีโหลดหน้าเว็บ</button>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <span id="total"></span>
+      <label class="scope"><input id="scope" type="checkbox" /> แสดงทุกแท็บ</label>
+      <span id="shortcut"></span>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="ui.js"></script>
   </body>
 </html>
